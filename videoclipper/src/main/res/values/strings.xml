@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">videoclipper</string>
+    <string name="clipper_description">拖动选择要发表的片段，限时30s</string>
 </resources>
