@@ -27,8 +27,8 @@ public class VideoThumbUtil {
 
     @SuppressWarnings("unchecked")
     public static  void getVideoThumb(Context context, Uri uri, LoadThumbsCallback callback ){
-        thumbWidth = (DisplayMetricsUtil.getWidth(context)- DensityUtils.dp2px(context,20)) / VIDEO_MAX_DURATION;
-        thumbHeight = DensityUtils.dp2px(context,60);
+        thumbWidth = (DisplayMetricsUtil.getWidth(context)- DensityUtils.dp2px(context,50)) / VIDEO_MAX_DURATION;
+        thumbHeight = DensityUtils.dp2px(context,80);
 
 
         final ArrayList<Bitmap> bitmaps = new ArrayList<>();
