@@ -58,7 +58,7 @@ public class TimeFormatUtil {
             minute = time / 60;
             if (minute < 60) {
                 second = time % 60;
-                timeStr = "00:" + unitFormat(minute) + ":" + unitFormat(second);
+                timeStr =   unitFormat(minute) + ":" + unitFormat(second);
             } else {
                 hour = minute / 60;
                 if (hour > 99)

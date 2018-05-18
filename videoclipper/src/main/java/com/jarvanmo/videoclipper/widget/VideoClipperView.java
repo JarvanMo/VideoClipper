@@ -94,6 +94,8 @@ public class VideoClipperView extends FrameLayout {
             super.onPlayerStateChanged(playWhenReady, playbackState);
             if (playbackState == Player.STATE_READY) {
                 exoVideoView.getPlayer().setPlayWhenReady(true);
+                exoVideoView.getPlayer().removeListener(defaultEventListener);
+                onPlayerReady();
             } else if (playbackState == Player.STATE_ENDED) {
                 onPlayerEnd();
             }
@@ -294,12 +296,12 @@ public class VideoClipperView extends FrameLayout {
 //
     private void onPlayerIndicatorSeekStart() {
 //        mMessageHandler.removeMessages(SHOW_PROGRESS);
-        exoVideoView.pause();
+//        exoVideoView.pause();
         notifyProgressUpdate();
     }
 
     private void onPlayerIndicatorSeekStop(SeekBar seekBar) {
-        exoVideoView.pause();
+//        exoVideoView.pause();
     }
 
     //
@@ -353,7 +355,7 @@ public class VideoClipperView extends FrameLayout {
     }
 
     private void onVideoReset() {
-        exoVideoView.pause();
+//        exoVideoView.pause();
         setPlayPauseViewIcon(false);
     }
 

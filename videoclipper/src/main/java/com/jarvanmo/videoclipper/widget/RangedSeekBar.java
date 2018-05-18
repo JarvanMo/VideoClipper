@@ -34,10 +34,6 @@ public class RangedSeekBar extends View {
 
 
 
-
-
-
-
     private static final String TAG = RangedSeekBar.class.getSimpleName();
     private static  int paddingTop ;
     private static  int textPositionX ;
@@ -113,16 +109,16 @@ public class RangedSeekBar extends View {
 
         mTextPaintL.setStrokeWidth(3);
         mTextPaintL.setARGB(255, 51, 51, 51);
-        mTextPaintL.setTextSize(28);
+        mTextPaintL.setTextSize(DensityUtils.sp2px(getContext(),18));
         mTextPaintL.setAntiAlias(true);
-        mTextPaintL.setColor(Color.parseColor("#444444"));
+        mTextPaintL.setColor(Color.parseColor("#FFFFFF"));
         mTextPaintL.setTextAlign(Paint.Align.LEFT);
 
         mTextPaintR.setStrokeWidth(3);
         mTextPaintR.setARGB(255, 51, 51, 51);
-        mTextPaintR.setTextSize(28);
+        mTextPaintR.setTextSize(DensityUtils.sp2px(getContext(),18));
         mTextPaintR.setAntiAlias(true);
-        mTextPaintR.setColor(Color.parseColor("#444444"));
+        mTextPaintR.setColor(Color.parseColor("#FFFFFF"));
         mTextPaintR.setTextAlign(Paint.Align.RIGHT);
     }
 
