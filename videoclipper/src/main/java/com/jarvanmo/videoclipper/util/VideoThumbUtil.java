@@ -15,7 +15,7 @@ import java.util.List;
 
 public class VideoThumbUtil {
 
-    public static final int VIDEO_MAX_DURATION = 15;// 15秒
+    public static final int VIDEO_MAX_DURATION = 30;// 15秒
     public static final int MIN_TIME_FRAME = 5;
     private static  int thumbWidth;
     private static  int thumbHeight ;
@@ -29,8 +29,8 @@ public class VideoThumbUtil {
 
     @SuppressWarnings("unchecked")
     public static  void getVideoThumb(Context context, Uri uri, LoadThumbsCallback callback ){
-        thumbWidth = (DisplayMetricsUtil.getWidth(context)- DensityUtils.dp2px(context,60)) / VIDEO_MAX_DURATION;
-        thumbHeight = DensityUtils.dp2px(context,context.getResources().getDimensionPixelSize(R.dimen.frames_video_height));
+        thumbWidth = (DisplayMetricsUtil.getWidth(context)- DensityUtils.dp2px(context,20)) / VIDEO_MAX_DURATION;
+        thumbHeight = DensityUtils.dp2px(context,60);
 
 
         final ArrayList<Bitmap> bitmaps = new ArrayList<>();

@@ -3,6 +3,7 @@ package com.jarvanmo.videoclipper.widget;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -18,6 +19,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.SurfaceView;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -95,6 +98,8 @@ public class VideoClipperView extends FrameLayout {
 
     private boolean isAttachedToWindow;
 
+    private int[] rotations = new int[]{0,90,180,270};
+    private int currentRotationIndex = 0;
 
     private Player.DefaultEventListener defaultEventListener = new Player.DefaultEventListener() {
         @Override
@@ -182,6 +187,7 @@ public class VideoClipperView extends FrameLayout {
         setupListeners();
 
         setupSeekBar();
+        setupScreenRotation();
     }
 
 
@@ -197,6 +203,20 @@ public class VideoClipperView extends FrameLayout {
     @SuppressLint("ClickableViewAccessibility")
     private void setupSeekBar() {
         progressSeekBar.setEnabled(false);
+    }
+
+    private void setupScreenRotation(){
+
+        findViewById(R.id.screenRotation).setOnClickListener(v -> {
+            currentRotationIndex = currentRotationIndex+1;
+
+            if(currentRotationIndex >= rotations.length){
+                currentRotationIndex = 0;
+            }
+
+            exoVideoView.getVideoSurfaceView().setRotation(rotations[currentRotationIndex]);
+
+        });
     }
 
     public void setUri(Uri videoUri) {
