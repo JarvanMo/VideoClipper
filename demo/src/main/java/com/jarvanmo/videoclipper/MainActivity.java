@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         videoClipperView = findViewById(R.id.videoClipper);
-        videoClipperView.setMaxDuration(30, TimeUnit.SECONDS);
+        videoClipperView.setMaxDuration(31, TimeUnit.SECONDS);
         Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, REQUEST_CODEE_VIDEO);
     }

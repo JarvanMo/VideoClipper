@@ -53,7 +53,7 @@ public class TimeFormatUtil {
         long minute;
         long second;
         if (time <= 0)
-            return "00:00:00";
+            return "00:00";
         else {
             minute = time / 60;
             if (minute < 60) {

@@ -15,6 +15,7 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,7 +25,10 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.util.Assertions;
 import com.jarvanmo.exoplayerview.media.SimpleMediaSource;
 import com.jarvanmo.exoplayerview.ui.ExoVideoView;
 import com.jarvanmo.videoclipper.R;
@@ -34,6 +38,7 @@ import com.jarvanmo.videoclipper.util.VideoThumbUtil;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -68,7 +73,7 @@ public class VideoClipperView extends FrameLayout {
     private Uri videoUri;
     private String mFinalPath;
     //
-    private long mMaxDuration;
+    private long mMaxDuration = 31 * 1000;
     //    private ProgressVideoListener mListeners;
 //
 //    private TrimVideoListener mOnTrimVideoListener;
@@ -85,7 +90,10 @@ public class VideoClipperView extends FrameLayout {
     private float rightThumbValue;
     private boolean isFromRestore = false;
     //
-    private final MessageHandler mMessageHandler = new MessageHandler(this);
+
+    private final Runnable updateProgressAction = this::updateProgress;
+
+    private boolean isAttachedToWindow;
 
 
     private Player.DefaultEventListener defaultEventListener = new Player.DefaultEventListener() {
@@ -94,6 +102,7 @@ public class VideoClipperView extends FrameLayout {
             super.onPlayerStateChanged(playWhenReady, playbackState);
             if (playbackState == Player.STATE_READY) {
                 exoVideoView.getPlayer().setPlayWhenReady(true);
+                updateProgress();
                 exoVideoView.getPlayer().removeListener(defaultEventListener);
                 onPlayerReady();
             } else if (playbackState == Player.STATE_ENDED) {
@@ -101,6 +110,8 @@ public class VideoClipperView extends FrameLayout {
             }
 
         }
+
+
     };
 
 
@@ -186,22 +197,6 @@ public class VideoClipperView extends FrameLayout {
     @SuppressLint("ClickableViewAccessibility")
     private void setupSeekBar() {
         progressSeekBar.setEnabled(false);
-        progressSeekBar.setOnTouchListener(new OnTouchListener() {
-            private float startX;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-
-                    case MotionEvent.ACTION_DOWN:
-                        startX = event.getX();
-                        return false;
-                }
-
-                return true;
-            }
-        });
-
     }
 
     public void setUri(Uri videoUri) {
@@ -472,6 +467,7 @@ public class VideoClipperView extends FrameLayout {
         progressSeekBar.setLayoutParams(lp);
         currentPixMax = screenWidthFull - left - right;
         progressSeekBar.getLayoutParams().width = currentPixMax;
+        progressSeekBar.requestLayout();
     }
 
     private void onSaveClicked() {
@@ -533,47 +529,63 @@ public class VideoClipperView extends FrameLayout {
     }
 //
 
-    private static class MessageHandler extends Handler {
-
-
-        private final WeakReference<VideoClipperView> mView;
-
-        MessageHandler(VideoClipperView view) {
-            mView = new WeakReference<>(view);
+    private void updateProgress() {
+        if (!isVisible() || !isAttachedToWindow) {
+            return;
         }
 
-        @Override
-        public void handleMessage(Message msg) {
-            VideoClipperView view = mView.get();
-            if (view == null || view.exoVideoView == null) {
-                return;
-            }
-//
-//            view.notifyProgressUpdate();
-//            if (view.mVideoView.isPlaying()) {
-//                sendEmptyMessageDelayed(0, 10);
-//            }
+        long position = 0;
+        long bufferedPosition = 0;
+        long duration = 0;
+        Player player = exoVideoView.getPlayer();
+        removeCallbacks(updateProgressAction);
+        if (player != null) {
+            updateVideoProgress(player.getCurrentPosition());
+            postDelayed(updateProgressAction,200);
         }
+
     }
 
+
+
+    /**
+     * Returns whether the controller is currently visible.
+     */
+    public boolean isVisible() {
+        return getVisibility() == VISIBLE;
+    }
+
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        isAttachedToWindow = true;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        isAttachedToWindow = false;
+    }
+
+
+
     //
-//    private void updateVideoProgress(int time) {
-//        if (mVideoView == null) {
-//            return;
-//        }
-//        if (isDebugMode) Log.i("Jason", "updateVideoProgress time = " + time);
-//        if (time >= mEndPosition) {
-//            mMessageHandler.removeMessages(SHOW_PROGRESS);
-//            mVideoView.pause();
-//            seekTo(mStartPosition);
-//            setPlayPauseViewIcon(false);
-//            return;
-//        }
-//
-//        if (progressSeekBar != null) {
-//            setProgressBarPosition(time);
-//        }
-//    }
+    private void updateVideoProgress(long time) {
+        if (exoVideoView.getPlayer() == null) {
+            return;
+        }
+        if (time >= mEndPosition) {
+//            exoVideoView.pause();
+            exoVideoView.getPlayer().setPlayWhenReady(true);
+            seekTo(mStartPosition);
+            return;
+        }
+
+        if (progressSeekBar != null) {
+            setProgressBarPosition(time);
+        }
+    }
 //
     private void notifyProgressUpdate() {
         if (mDuration == 0) {

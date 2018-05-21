@@ -7,10 +7,12 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 
+import com.google.android.exoplayer2.Player;
 import com.jarvanmo.videoclipper.R;
 import com.jarvanmo.videoclipper.util.DensityUtils;
 import com.jarvanmo.videoclipper.util.DisplayMetricsUtil;
@@ -65,6 +67,8 @@ public class RangedSeekBar extends View {
     private int drawTop;
     private int thumbMargin;
 
+    private int minDuration = 4;// in second
+
     public RangedSeekBar(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
@@ -76,8 +80,8 @@ public class RangedSeekBar extends View {
 
     private void init() {
 
-        paddingTop = DensityUtils.dp2px(getContext(),15);
-        textPositionX = DensityUtils.dp2px(getContext(),10);
+        paddingTop = DensityUtils.dp2px(getContext(),21);
+        textPositionX = DensityUtils.dp2px(getContext(),13);
         deviceWidth = DisplayMetricsUtil.getWidth(getContext()) - DensityUtils.dp2px(getContext(),12);
 
         shadowMargin = DensityUtils.dp2px(getContext(),5);
@@ -89,7 +93,7 @@ public class RangedSeekBar extends View {
         mThumbWidth = Thumb.getWidthBitmap(mThumbs);
         mThumbHeight = Thumb.getHeightBitmap(mThumbs);
 
-        mHeightTimeLine = getContext().getResources().getDimensionPixelOffset(R.dimen.frames_video_height);
+        mHeightTimeLine = getContext().getResources().getDimensionPixelSize(R.dimen.frames_video_height);
 
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -171,7 +175,7 @@ public class RangedSeekBar extends View {
                 if (th.getIndex() == 0) {
                     final float x = th.getPos();
                     if (x > mPixelRangeMin) {
-                        Rect mRect = new Rect((int) mThumbWidth / 2, paddingTop, (int) (x + mThumbWidth / 2), mHeightTimeLine + paddingTop);
+                        Rect mRect = new Rect((int) mThumbWidth / 2, paddingTop, (int) (x + mThumbWidth / 2), mHeightTimeLine + paddingTop+DensityUtils.dp2px(getContext(),2));
                         canvas.drawRect(mRect, mShadow);
                     }
                 } else {
@@ -180,7 +184,7 @@ public class RangedSeekBar extends View {
                     if (mPixelRangeMax < deviceWidth) {
                         mRect = new Rect((int) x, paddingTop, (int) (mPixelRangeMax), mHeightTimeLine + paddingTop);
                     } else if (mPixelRangeMax >= deviceWidth)
-                        mRect = new Rect((int) x, paddingTop, (int) (deviceWidth + shadowMargin), mHeightTimeLine + paddingTop);
+                        mRect = new Rect((int) x, paddingTop, (int) (deviceWidth + shadowMargin), mHeightTimeLine + paddingTop+DensityUtils.dp2px(getContext(),2));
 
                     if (mRect != null) canvas.drawRect(mRect, mShadow);
 
@@ -263,14 +267,21 @@ public class RangedSeekBar extends View {
             }
 
             case MotionEvent.ACTION_MOVE: {
+
                 mThumb = mThumbs.get(currentThumb);
                 mThumb2 = mThumbs.get(currentThumb == 0 ? 1 : 0);
                 // Calculate the distance moved
                 final float dx = coordinateX - mThumb.getLastTouchX();
                 final float newX = mThumb.getPos() + dx;
-                if (currentThumb == 0) {
 
-                    if ((newX + mThumb.getWidthBitmap()) >= mThumb2.getPos()) {
+
+
+                if (currentThumb == 0) {
+                    if(dx >= 0 && mEndPosition - mStartPosition < minDuration){
+                        return true;
+                    }
+
+                    if ((newX + mThumb.getWidthBitmap()) >= mThumb2.getPos()){
                         mThumb.setPos(mThumb2.getPos() - mThumb.getWidthBitmap());
                     } else if (newX <= mPixelRangeMin) {
                         mThumb.setPos(mPixelRangeMin);
@@ -286,6 +297,12 @@ public class RangedSeekBar extends View {
                     }
 
                 } else {
+
+                    if(dx <= 0 && mEndPosition - mStartPosition < minDuration){
+                        return true;
+                    }
+
+
                     if (newX <= mThumb2.getPos() + mThumb2.getWidthBitmap()) {
                         mThumb.setPos(mThumb2.getPos() + mThumb.getWidthBitmap());
                     } else if (newX >= deviceWidth) {
@@ -293,6 +310,7 @@ public class RangedSeekBar extends View {
                     } else if (newX >= mPixelRangeMax) {
                         mThumb.setPos(mPixelRangeMax);
                     } else {
+                        Log.e("tag","hh22222");
                         //Check if thumb is not out of max width
                         checkPositionThumb(mThumb2, mThumb, dx, false);
                         // Move the object
@@ -319,6 +337,7 @@ public class RangedSeekBar extends View {
                 mThumbRight.setPos(mThumbLeft.getPos() + dx + mMaxWidth);
                 setThumbPos(1, mThumbRight.getPos());
             }
+
         } else if (!isLeftMove && dx > 0) {
             if (((mThumbRight.getPos() + dx) - mThumbLeft.getPos()) > mMaxWidth) {
                 mThumbLeft.setPos(mThumbRight.getPos() + dx - mMaxWidth);
@@ -364,6 +383,7 @@ public class RangedSeekBar extends View {
             float pxThumb = 0;
             return px + pxThumb;
         }
+
     }
 
     private float getThumbValue(int index) {

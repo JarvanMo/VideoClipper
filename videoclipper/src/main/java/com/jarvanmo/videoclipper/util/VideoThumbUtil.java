@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.content.AsyncTaskLoader;
 
+import com.jarvanmo.videoclipper.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,8 +29,8 @@ public class VideoThumbUtil {
 
     @SuppressWarnings("unchecked")
     public static  void getVideoThumb(Context context, Uri uri, LoadThumbsCallback callback ){
-        thumbWidth = (DisplayMetricsUtil.getWidth(context)- DensityUtils.dp2px(context,50)) / VIDEO_MAX_DURATION;
-        thumbHeight = DensityUtils.dp2px(context,80);
+        thumbWidth = (DisplayMetricsUtil.getWidth(context)- DensityUtils.dp2px(context,60)) / VIDEO_MAX_DURATION;
+        thumbHeight = DensityUtils.dp2px(context,context.getResources().getDimensionPixelSize(R.dimen.frames_video_height));
 
 
         final ArrayList<Bitmap> bitmaps = new ArrayList<>();
