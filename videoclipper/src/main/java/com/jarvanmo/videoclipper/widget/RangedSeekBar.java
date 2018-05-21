@@ -242,6 +242,8 @@ public class RangedSeekBar extends View {
 
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
+
+
                 // Remember where we started
                 currentThumb = getClosestThumb(coordinateX);
 
@@ -256,6 +258,7 @@ public class RangedSeekBar extends View {
                 return true;
             }
             case MotionEvent.ACTION_UP: {
+
 
                 if (currentThumb == -1) {
                     return false;
@@ -310,7 +313,6 @@ public class RangedSeekBar extends View {
                     } else if (newX >= mPixelRangeMax) {
                         mThumb.setPos(mPixelRangeMax);
                     } else {
-                        Log.e("tag","hh22222");
                         //Check if thumb is not out of max width
                         checkPositionThumb(mThumb2, mThumb, dx, false);
                         // Move the object
