@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">videoclipper</string>
     <string name="clipper_description">拖动选择要发表的片段，限时30s</string>
+    <string name="press_to_record">按住拍</string>
+    <string name="next">下一步</string>
 </resources>

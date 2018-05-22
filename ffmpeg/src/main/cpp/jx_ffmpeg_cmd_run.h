@@ -9,14 +9,14 @@
 #include <jni.h>
 
 JNIEXPORT jint JNICALL
-Java_com_mabeijianxi_smallvideorecord2_jniinterface_FFmpegBridge_jxCMDRun(JNIEnv *env, jclass type,
+Java_com_jarvanmo_ffmpeg_jniinterface_FFmpegBridge_jxCMDRun(JNIEnv *env, jclass type,
                                                                        jobjectArray commands);
 
 void log_callback(void* ptr, int level, const char* fmt,
                             va_list vl);
 
 JNIEXPORT void JNICALL
-Java_com_mabeijianxi_smallvideorecord2_jniinterface_FFmpegBridge_initJXFFmpeg(JNIEnv *env, jclass type,
+Java_com_jarvanmo_ffmpeg_jniinterface_FFmpegBridge_initJXFFmpeg(JNIEnv *env, jclass type,
         jboolean debug,
 jstring logUrl_);
 
