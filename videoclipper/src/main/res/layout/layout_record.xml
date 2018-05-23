@@ -48,13 +48,13 @@
         android:layout_marginEnd="8dp"
         android:background="@null"
         android:contentDescription="@null"
-        app:layout_constraintBottom_toBottomOf="@+id/switchCamera"
-        app:layout_constraintEnd_toStartOf="@+id/switchCamera"
-        app:layout_constraintTop_toTopOf="@+id/switchCamera"
-        app:srcCompat="@drawable/ic_flash_on_white_24dp" />
+        app:layout_constraintBottom_toBottomOf="@+id/isFrontCamera"
+        app:layout_constraintEnd_toStartOf="@+id/isFrontCamera"
+        app:layout_constraintTop_toTopOf="@+id/isFrontCamera"
+        app:srcCompat="@drawable/layer_list_flash_mode" />
 
     <CheckBox
-        android:id="@+id/switchCamera"
+        android:id="@+id/isFrontCamera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -62,11 +62,11 @@
         android:layout_marginTop="8dp"
         android:background="@drawable/selector_switch_camera"
         android:button="@null"
+        android:checked="false"
         android:contentDescription="@null"
         app:layout_constraintBottom_toBottomOf="@+id/next"
         app:layout_constraintEnd_toStartOf="@+id/next"
-        app:layout_constraintTop_toTopOf="@+id/next"
-         />
+        app:layout_constraintTop_toTopOf="@+id/next" />
 
     <TextView
         android:id="@+id/next"

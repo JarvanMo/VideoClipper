@@ -160,7 +160,7 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
     /**
      * 摄像头类型（前置/后置），默认后置
      */
-    protected int mCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+    public int mCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
     /**
      * 视频码率
      */
@@ -427,18 +427,16 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
     public MediaObject setOutputDirectory(String key, String path) {
         if (StringUtils.isNotEmpty(path)) {
             File f = new File(path);
-            if (f != null) {
-                if (f.exists()) {
-                    //已经存在，删除
-                    if (f.isDirectory())
-                        FileUtils.deleteDir(f);
-                    else
-                        FileUtils.deleteFile(f);
-                }
+            if (f.exists()) {
+                //已经存在，删除
+                if (f.isDirectory())
+                    FileUtils.deleteDir(f);
+                else
+                    FileUtils.deleteFile(f);
+            }
 
-                if (f.mkdirs()) {
-                    mMediaObject = new MediaObject(key, path, mVideoBitrate);
-                }
+            if (f.mkdirs()) {
+                mMediaObject = new MediaObject(key, path, mVideoBitrate);
             }
         }
         return mMediaObject;

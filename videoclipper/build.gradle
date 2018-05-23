@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-
+apply plugin: 'com.novoda.bintray-release'
 android {
     compileSdkVersion 27
 
@@ -26,6 +26,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+}
+
+publish {
+    userOrg = 'jarvanmo'
+    groupId = 'com.jarvanmo'
+    artifactId = 'videoclipper'
+    publishVersion = '0.0.1-alpha'
+    desc = 'video clipper'
+    website = 'https://github.com/JarvanMo/VideoClipper'
 }
 
 dependencies {
