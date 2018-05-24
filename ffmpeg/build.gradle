@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
+apply plugin: 'com.github.dcendents.android-maven'
 android {
     compileSdkVersion 27
     defaultConfig {
@@ -39,7 +40,7 @@ android {
 
 
 }
-
+group='com.jarvanmo.videoclipper'
 publish {
     artifactId = 'videoclipper-ffmpeg'
     userOrg = rootProject.userOrg
