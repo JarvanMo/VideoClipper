@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'com.github.dcendents.android-maven'
 
 android {
@@ -10,7 +11,7 @@ android {
         minSdkVersion 17
         targetSdkVersion 21
         versionCode 2
-        versionName "0.0.7-alpha"
+        versionName "0.0.2-alpha"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -29,10 +30,7 @@ android {
     }
 }
 
-group='com.jarvanmo.videoclipper'
-
-
-
+group='com.github.JarvanMo'
 
 publish {
     artifactId = 'videoclipper'

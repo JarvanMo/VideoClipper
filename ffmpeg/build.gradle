@@ -40,7 +40,7 @@ android {
 
 
 }
-group='com.jarvanmo.videoclipper'
+group='com.github.JarvanMo'
 publish {
     artifactId = 'videoclipper-ffmpeg'
     userOrg = rootProject.userOrg
