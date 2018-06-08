@@ -17,6 +17,13 @@
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:theme="@style/FullscreenTheme">
+
+        </activity>
+        <activity android:name=".RecordActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/FullscreenTheme"
+            >
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:keepScreenOn="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -20,7 +19,6 @@
         android:id="@+id/recordProgress"
         android:layout_width="0dp"
         android:layout_height="8dp"
-        android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -51,7 +49,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/isFrontCamera"
         app:layout_constraintEnd_toStartOf="@+id/isFrontCamera"
         app:layout_constraintTop_toTopOf="@+id/isFrontCamera"
-        app:srcCompat="@drawable/layer_list_flash_mode" />
+        app:srcCompat="@drawable/selector_switch_flash_mode" />
 
     <CheckBox
         android:id="@+id/isFrontCamera"
@@ -79,8 +77,9 @@
         android:paddingBottom="8dp"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:background="@drawable/selector_by_theme"
-        android:textColor="@android:color/white"
+        android:enabled="false"
+        android:background="@color/transparent"
+        android:textColor="@drawable/selector_next_text_color"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/recordProgress" />
 

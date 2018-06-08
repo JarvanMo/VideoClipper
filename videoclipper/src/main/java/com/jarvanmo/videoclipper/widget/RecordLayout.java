@@ -3,7 +3,11 @@ package com.jarvanmo.videoclipper.widget;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.hardware.Camera;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
@@ -18,8 +22,10 @@ import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jarvanmo.ffmpeg.DeviceUtils;
+import com.jarvanmo.ffmpeg.Log;
 import com.jarvanmo.ffmpeg.MediaRecorderBase;
 import com.jarvanmo.ffmpeg.MediaRecorderNative;
 import com.jarvanmo.ffmpeg.RecordProgressView;
@@ -44,11 +50,13 @@ public class RecordLayout extends FrameLayout implements
 
 
     private int minRecordTime = 3 * 1000;
-    private int maxRecordTime = 30 * 1000;
+    private int maxRecordTime = 15 * 1000;
+
 
     private CheckBox isFrontCamera;
     private ImageButton switchFlash;
     private View next;
+
 
     private TextView pressToRecord;
     private SurfaceView surfaceView;
@@ -68,9 +76,6 @@ public class RecordLayout extends FrameLayout implements
     private volatile boolean mPressedStatus;
 
     private Handler handler = new RecordHandler(this);
-
-
-    private int switchFlashLevel = 0;
 
 
     private View.OnTouchListener pressToRecordOnTouchListener = new View.OnTouchListener() {
@@ -131,13 +136,12 @@ public class RecordLayout extends FrameLayout implements
     };
 
 
-
     public RecordLayout(@NonNull Context context) {
-        this(context,null);
+        this(context, null);
     }
 
     public RecordLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs,0);
+        this(context, attrs, 0);
     }
 
     public RecordLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
@@ -160,7 +164,7 @@ public class RecordLayout extends FrameLayout implements
     }
 
 
-    private void findViews(Context context){
+    private void findViews(Context context) {
         LayoutInflater.from(context).inflate(R.layout.layout_record, this, true);
         isFrontCamera = findViewById(R.id.isFrontCamera);
         pressToRecord = findViewById(R.id.pressToRecord);
@@ -172,31 +176,27 @@ public class RecordLayout extends FrameLayout implements
 
 
     @SuppressLint("ClickableViewAccessibility")
-    private void setupPressToRecord(){
+    private void setupPressToRecord() {
         pressToRecord.setOnTouchListener(pressToRecordOnTouchListener);
     }
 
-    private void setupRecordPreview(){
+    private void setupRecordPreview() {
 
     }
 
-    private void setupCameraController(){
+    private void setupCameraController() {
         if (MediaRecorderBase.isSupportFrontCamera()) {
             isFrontCamera.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (handler.hasMessages(HANDLE_STOP_RECORD)) {
-                    handler.removeMessages(HANDLE_STOP_RECORD);
-                }
+//                if (mRecordLed.isChecked()) {
+//                    if (mMediaRecorder != null) {
+//                        mMediaRecorder.toggleFlashMode();
+//                    }
+//                    mRecordLed.setChecked(false);
+//                }
 
-                if (mMediaObject != null) {
-                    MediaObject.MediaPart part = mMediaObject.getCurrentPart();
-                    if (part != null) {
-                        if (part.remove) {
-                            part.remove = false;
-//                        mRecordDelete.setChecked(false);
-                            if (recordProgress != null)
-                                recordProgress.invalidate();
-                        }
-                    }
+                if (mMediaRecorder != null) {
+                    mMediaRecorder.switchCamera();
+                    switchFlash.setEnabled(!mMediaRecorder.isFrontCamera());
                 }
 
 
@@ -204,20 +204,21 @@ public class RecordLayout extends FrameLayout implements
         } else {
             isFrontCamera.setVisibility(View.GONE);
         }
+
         // 是否支持闪光灯
         if (DeviceUtils.isSupportCameraLedFlash(getContext().getPackageManager())) {
-            switchFlash.setOnClickListener(v -> {
-
-            });
+            switchFlash.setOnClickListener(v -> switchFlash());
         } else {
             switchFlash.setVisibility(View.GONE);
         }
 
     }
 
-    private void setupRecordProgress(){
-
+    private void setupRecordProgress() {
+        recordProgress.setMaxDuration(maxRecordTime);
+        recordProgress.setMinTime(minRecordTime);
     }
+
     /**
      * 初始化拍摄SDK
      */
@@ -238,22 +239,43 @@ public class RecordLayout extends FrameLayout implements
             return;
         }
 
-        File videoCache = new File(file,"videoCache");
-        if(!videoCache.exists()){
-            if(!videoCache.mkdirs()){
+        File videoCache = new File(file, "videoCache");
+        if (!videoCache.exists()) {
+            if (!videoCache.mkdirs()) {
                 return;
             }
 
         }
 
 
-
-
         String key = String.valueOf(System.currentTimeMillis());
         mMediaObject = mMediaRecorder.setOutputDirectory(key,
                 videoCache.getAbsolutePath() + key);
         mMediaRecorder.setSurfaceHolder(surfaceView.getHolder());
+        mMediaRecorder.autoFocus((success, camera) -> {
+
+        });
         mMediaRecorder.prepare();
+    }
+
+
+    private void switchFlash() {
+
+        int level = switchFlash.getDrawable().getLevel() + 1;
+        if (level > 2) {
+            level = 0;
+        }
+
+
+        switchFlash.setImageLevel(level);
+        String flashMode = Camera.Parameters.FLASH_MODE_AUTO;
+        if (level == 1) {
+            flashMode = Camera.Parameters.FLASH_MODE_TORCH;
+        } else if (level == 2) {
+            flashMode = Camera.Parameters.FLASH_MODE_OFF;
+        }
+
+        mMediaRecorder.setFlashMode(flashMode);
     }
 
     /**
@@ -287,7 +309,6 @@ public class RecordLayout extends FrameLayout implements
 
         setStartUI();
     }
-
 
 
     private void setStartUI() {
@@ -325,65 +346,104 @@ public class RecordLayout extends FrameLayout implements
         checkViewsVisibility();
     }
 
+    /**
+     * 停止录制
+     */
+    private void stopRecord() {
+        if (mMediaRecorder != null) {
+            mMediaRecorder.stopRecord();
+        }
+        setStopUI();
+    }
+
 
     private void checkViewsVisibility() {
         int duration = 0;
 
         Context context = getContext();
-        if(!(context instanceof  Activity)){
-            return ;
+        if (!(context instanceof Activity)) {
+            return;
         }
 
         if (!((Activity) context).isFinishing() && mMediaObject != null) {
             duration = mMediaObject.getDuration();
             if (duration < minRecordTime) {
                 if (duration == 0) {
-                    isFrontCamera.setVisibility(View.VISIBLE);
+//                    isFrontCamera.setVisibility(View.VISIBLE);
                 } else {
-                    isFrontCamera.setVisibility(View.GONE);
+//                    isFrontCamera.setVisibility(View.GONE);
                 }
                 // 视频必须大于3秒
-                if (next.getVisibility() != View.INVISIBLE) {
-                    next.setVisibility(View.INVISIBLE);
-                }
+//                if (next.getVisibility() != View.INVISIBLE) {
+//                    next.setVisibility(View.INVISIBLE);
+//                }
+                next.setEnabled(false);
             } else {
                 // 下一步
-                if (next.getVisibility() != View.VISIBLE) {
-                    next.setVisibility(View.VISIBLE);
-                }
+//                if (next.getVisibility() != View.VISIBLE) {
+//                    next.setVisibility(View.VISIBLE);
+//                }
+                next.setEnabled(true);
             }
         }
+    }
+
+    public void onResume() {
+        if (mMediaRecorder == null) {
+            setupMediaRecorder();
+        } else {
+//            mRecordLed.setChecked(false);
+            mMediaRecorder.prepare();
+            recordProgress.setData(mMediaObject);
+        }
+    }
+
+    public void onDestroy() {
+        mMediaRecorder.release();
+    }
+
+    public void onStop() {
+        if (mMediaRecorder instanceof MediaRecorderNative) {
+            ((MediaRecorderNative) mMediaRecorder).activityStop();
+        }
+//        hideProgress();
+//        mProgressDialog = null;
+
     }
 
 
     @Override
     public void onPrepared() {
-
     }
 
     @Override
     public void onVideoError(int what, int extra) {
-
+        Log.e("---", "-onVideoError");
     }
 
     @Override
     public void onAudioError(int what, String message) {
-
+        Log.e("---", "-onAudioError");
     }
 
     @Override
     public void onEncodeStart() {
-
+        Log.e("---", "-start");
     }
 
     @Override
     public void onEncodeProgress(int progress) {
-
+        Log.e("---", "-onEncodeProgress");
     }
 
     @Override
     public void onEncodeComplete() {
-
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        String path = mMediaObject.getOutputTempTranscodingVideoPath();//该路径可以自定义
+        File file = new File(path);
+        Uri uri = Uri.fromFile(file);
+        intent.setDataAndType(uri, "video/*");
+        getContext().startActivity(intent);
     }
 
     @Override
@@ -391,10 +451,10 @@ public class RecordLayout extends FrameLayout implements
     }
 
 
-    private static class RecordHandler extends Handler{
+    private static class RecordHandler extends Handler {
         private WeakReference<RecordLayout> weakReference;
 
-        RecordHandler(RecordLayout recordLayout){
+        RecordHandler(RecordLayout recordLayout) {
 
             weakReference = new WeakReference<>(recordLayout);
 
@@ -407,16 +467,18 @@ public class RecordLayout extends FrameLayout implements
 
                     Context context = weakReference.get().getContext();
 
-                    if(!(context instanceof Activity)){
+                    if (!(context instanceof Activity)) {
                         return;
                     }
 
                     if (weakReference.get().pressToRecord != null && !((Activity) context).isFinishing()) {
 //                        && !isFinishing()
                         if (weakReference.get().mMediaObject != null
-                                &&weakReference.get().mMediaObject.getMedaParts() != null
+                                && weakReference.get().mMediaObject.getMedaParts() != null
                                 && weakReference.get().mMediaObject.getDuration() >= weakReference.get().maxRecordTime) {
+
                             weakReference.get().next.performClick();
+                            weakReference.get().stopRecord();
                             return;
                         }
                         if (weakReference.get().recordProgress != null)
@@ -424,8 +486,9 @@ public class RecordLayout extends FrameLayout implements
                         // if (mPressedStatus)
                         // titleText.setText(String.format("%.1f",
                         // mMediaRecorder.getDuration() / 1000F));
-                        if (weakReference.get().mPressedStatus)
-                            sendEmptyMessageDelayed(0, 30);
+                        if (weakReference.get().mPressedStatus) {
+                            sendEmptyMessageDelayed(HANDLE_INVALIDATE_PROGRESS, 30);
+                        }
                     }
                     break;
             }

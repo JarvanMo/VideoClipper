@@ -385,7 +385,7 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
      *
      * @param value
      */
-    private boolean setFlashMode(String value) {
+    public boolean setFlashMode(String value) {
         if (mParameters != null && camera != null) {
             try {
                 if (Camera.Parameters.FLASH_MODE_TORCH.equals(value) || Camera.Parameters.FLASH_MODE_OFF.equals(value)) {
