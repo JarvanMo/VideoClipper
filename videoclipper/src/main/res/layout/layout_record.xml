@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:keepScreenOn="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -35,7 +36,21 @@
         android:text="@string/press_to_record"
         android:textColor="@color/camera_progress_three"
         android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="@+id/recordPreview"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/recordMode"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/recordPreview" />
+
+    <Button
+        android:id="@+id/clickToRecord"
+        android:layout_width="108dp"
+        android:layout_height="108dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/layer_list_click_record_ready"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@+id/recordMode"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/recordPreview" />
 
@@ -96,6 +111,45 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/next"
         app:srcCompat="@drawable/ic_arrow_back_white_24dp" />
+
+    <RadioGroup
+        android:id="@+id/recordMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:orientation="horizontal"
+        android:background="@drawable/shape_record_mode_wrapper_bg"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" >
+
+        <RadioButton
+            android:id="@+id/pressMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:padding="3dp"
+            android:text="长按拍摄"
+            android:checked="true"
+            android:background="@drawable/selector_record_mode_radio_button_left_bg"
+            android:textColor="@drawable/selector_record_mode_text_color"
+            android:button="@null"
+            />
+
+        <RadioButton
+            android:id="@+id/clickMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:padding="3dp"
+            android:text="单击拍摄"
+            android:background="@drawable/selector_record_mode_radio_button_right_bg"
+            android:textColor="@drawable/selector_record_mode_text_color"
+            android:button="@null"
+            />
+    </RadioGroup>
 
 
 </android.support.constraint.ConstraintLayout>
