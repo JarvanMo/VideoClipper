@@ -3,4 +3,10 @@
     <string name="clipper_description">拖动选择要发表的片段，限时30s</string>
     <string name="press_to_record">按住拍</string>
     <string name="next">下一步</string>
+    <string name="click_to_press">单击拍摄</string>
+    <string name="press_to_record2">长按拍摄</string>
+    <string name="prepare_to_record">相机准备中</string>
+    <string name="ready_to_record">可以拍摄了</string>
+    <string name="record_too_long_try_again">视频录制超长，请删除后重试</string>
+    <string name="encoding_video">正在合成中</string>
 </resources>

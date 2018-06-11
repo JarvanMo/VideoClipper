@@ -12,8 +12,10 @@
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
 
     <com.jarvanmo.ffmpeg.RecordProgressView
@@ -34,22 +36,23 @@
         android:layout_marginStart="8dp"
         android:background="@drawable/small_video_shoot"
         android:text="@string/press_to_record"
-        android:textColor="@color/camera_progress_three"
+        android:textColor="@color/line_color"
         android:textSize="18sp"
-        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/recordMode"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/recordPreview" />
 
-    <Button
+    <ImageView
         android:id="@+id/clickToRecord"
         android:layout_width="108dp"
         android:layout_height="108dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:background="@drawable/layer_list_click_record_ready"
+        android:src="@drawable/level_list_click_record"
+        android:contentDescription="@null"
         android:textSize="18sp"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/recordMode"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/recordPreview" />
@@ -93,7 +96,8 @@
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
         android:enabled="false"
-        android:background="@color/transparent"
+        android:textSize="16sp"
+        android:background="@drawable/selector_record_next_bg"
         android:textColor="@drawable/selector_next_text_color"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/recordProgress" />
@@ -110,7 +114,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/next"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/next"
-        app:srcCompat="@drawable/ic_arrow_back_white_24dp" />
+        app:srcCompat="@drawable/ic_close_white_24dp" />
 
     <RadioGroup
         android:id="@+id/recordMode"
@@ -131,7 +135,7 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:padding="3dp"
-            android:text="长按拍摄"
+            android:text="@string/press_to_record2"
             android:checked="true"
             android:background="@drawable/selector_record_mode_radio_button_left_bg"
             android:textColor="@drawable/selector_record_mode_text_color"
@@ -144,12 +148,28 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:padding="3dp"
-            android:text="单击拍摄"
+            android:text="@string/click_to_press"
             android:background="@drawable/selector_record_mode_radio_button_right_bg"
             android:textColor="@drawable/selector_record_mode_text_color"
             android:button="@null"
             />
     </RadioGroup>
+
+    <TextView
+        android:id="@+id/recordInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/prepare_to_record"
+        android:textSize="20sp"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </android.support.constraint.ConstraintLayout>

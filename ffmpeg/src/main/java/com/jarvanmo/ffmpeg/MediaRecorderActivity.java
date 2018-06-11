@@ -395,7 +395,6 @@ public class MediaRecorderActivity extends Activity implements
         if (mMediaObject != null && mMediaObject.getDuration() > 1) {
             // 未转码
             new AlertDialog.Builder(this)
-                    .setTitle(R.string.hint)
                     .setMessage(R.string.record_camera_exit_dialog_message)
                     .setNegativeButton(
                             R.string.record_camera_cancel_dialog_yes,

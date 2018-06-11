@@ -404,8 +404,9 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
      * 设置码率
      */
     public void setVideoBitRate(int bitRate) {
-        if (bitRate > 0)
+        if (bitRate > 0) {
             mVideoBitrate = bitRate;
+        }
     }
 
     /**

@@ -3,16 +3,16 @@ package com.jarvanmo.videoclipper.widget;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
+import android.content.DialogInterface;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+import android.support.v7.app.AlertDialog;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -21,11 +21,11 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.jarvanmo.ffmpeg.DeviceUtils;
-import com.jarvanmo.ffmpeg.Log;
 import com.jarvanmo.ffmpeg.MediaRecorderBase;
 import com.jarvanmo.ffmpeg.MediaRecorderNative;
 import com.jarvanmo.ffmpeg.RecordProgressView;
@@ -38,6 +38,19 @@ import java.lang.ref.WeakReference;
 public class RecordLayout extends FrameLayout implements
         MediaRecorderBase.OnErrorListener, MediaRecorderBase.OnPreparedListener,
         MediaRecorderBase.OnEncodeListener {
+
+    public interface OnNextClickListener{
+        void OnEncodeStart();
+        void OnEncoding(int progress);
+        void OnEncodeSuccess(Uri uri);
+        void OnEncodeFail();
+    }
+
+    public interface OnCloseClickListener{
+        void OnPositiveClicked();
+        void OnNegativeClickec();
+    }
+
 
     /**
      * 刷新进度条
@@ -52,14 +65,19 @@ public class RecordLayout extends FrameLayout implements
     private int minRecordTime = 3 * 1000;
     private int maxRecordTime = 15 * 1000;
 
+    private int defaultDelayMills = 1000;
 
     private CheckBox isFrontCamera;
     private ImageButton switchFlash;
     private View next;
-
+    private View close;
 
     private TextView pressToRecord;
     private SurfaceView surfaceView;
+    private ImageView clickToRecord;
+    private RadioGroup recordModeRadioGroup;
+    private TextView recordInfo;
+
 
 
     /**
@@ -72,10 +90,16 @@ public class RecordLayout extends FrameLayout implements
     private RecordProgressView recordProgress;
 
 
+    private OnNextClickListener onNextClickListener;
+    private OnCloseClickListener onCloseClickListener;
+
+
     private boolean startState;
     private volatile boolean mPressedStatus;
 
     private Handler handler = new RecordHandler(this);
+
+    private Runnable removeRecordInfoAction = () -> recordInfo.setText("");
 
 
     private View.OnTouchListener pressToRecordOnTouchListener = new View.OnTouchListener() {
@@ -90,35 +114,15 @@ public class RecordLayout extends FrameLayout implements
                 case MotionEvent.ACTION_DOWN:
                     // 检测是否手动对焦
                     // 判断是否已经超时
-                    if (mMediaObject.getDuration() >= maxRecordTime) {
-                        return true;
-                    }
 
-                    // 取消回删
-                    if (cancelDelete())
+                    if (startRecordCheck()) {
                         return true;
-                    if (!startState) {
-                        startState = true;
-                        startRecord();
-                    } else {
-                        mMediaObject.buildMediaPart(mMediaRecorder.mCameraId);
-                        recordProgress.setData(mMediaObject);
-                        setStartUI();
-                        mMediaRecorder.setRecordState(true);
                     }
 
                     break;
 
                 case MotionEvent.ACTION_UP:
-
-                    mMediaRecorder.setRecordState(false);
-                    if (mMediaObject.getDuration() >= maxRecordTime) {
-                        next.performClick();
-                    } else {
-                        mMediaRecorder.setStopDate();
-                        setStopUI();
-                    }
-
+                    stopRecordCheck();
 
                     // 暂停
 /*                    if (mPressedStatus) {
@@ -146,23 +150,29 @@ public class RecordLayout extends FrameLayout implements
 
     public RecordLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        findViews(context);
-        setupPressToRecord();
-        setupRecordPreview();
-        setupCameraController();
-        setupRecordProgress();
+        setup(context);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public RecordLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
+        setup(context);
+    }
+
+
+    private void setup(Context context) {
         findViews(context);
+        setupRecordMode();
         setupPressToRecord();
+        setupClickToRecord();
+        setupMediaRecorder();
         setupRecordPreview();
         setupCameraController();
         setupRecordProgress();
+        setupConfig();
+        setupNext();
+        setupClose();
     }
-
 
     private void findViews(Context context) {
         LayoutInflater.from(context).inflate(R.layout.layout_record, this, true);
@@ -172,12 +182,60 @@ public class RecordLayout extends FrameLayout implements
         recordProgress = findViewById(R.id.recordProgress);
         switchFlash = findViewById(R.id.switchFlash);
         next = findViewById(R.id.next);
+        clickToRecord = findViewById(R.id.clickToRecord);
+        recordModeRadioGroup = findViewById(R.id.recordMode);
+        recordInfo = findViewById(R.id.recordInfo);
+        close = findViewById(R.id.back);
     }
 
+    private void setupRecordMode() {
+        recordModeRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.pressMode) {
+                pressToRecord.setVisibility(View.VISIBLE);
+                clickToRecord.setVisibility(View.GONE);
+            } else {
+                pressToRecord.setVisibility(View.GONE);
+                clickToRecord.setVisibility(View.VISIBLE);
+            }
+        });
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     private void setupPressToRecord() {
         pressToRecord.setOnTouchListener(pressToRecordOnTouchListener);
+    }
+
+    private void setupClickToRecord() {
+        clickToRecord.setOnClickListener(v -> {
+
+            if (mMediaRecorder == null) {
+                return;
+            }
+
+            int level = clickToRecord.getDrawable().getLevel();
+
+
+            if (level == 0) {
+                if (startRecordCheck()) {
+                    return;
+                }
+            } else {
+                stopRecordCheck();
+            }
+
+
+            level++;
+
+
+            if (level > 1) {
+                level = 0;
+            }
+
+            clickToRecord.setImageLevel(level);
+
+
+        });
+
     }
 
     private void setupRecordPreview() {
@@ -215,6 +273,7 @@ public class RecordLayout extends FrameLayout implements
     }
 
     private void setupRecordProgress() {
+        recordProgress.invalidate();
         recordProgress.setMaxDuration(maxRecordTime);
         recordProgress.setMinTime(minRecordTime);
     }
@@ -224,6 +283,8 @@ public class RecordLayout extends FrameLayout implements
      */
     private void setupMediaRecorder() {
         mMediaRecorder = new MediaRecorderNative();
+
+        mMediaRecorder.setVideoBitRate(580000);
 
         mMediaRecorder.setOnErrorListener(this);
         mMediaRecorder.setOnEncodeListener(this);
@@ -259,6 +320,15 @@ public class RecordLayout extends FrameLayout implements
     }
 
 
+    private void setupNext(){
+        next.setOnClickListener(v-> stopRecord());
+    }
+
+
+    private void setupClose(){
+        close.setOnClickListener(v-> onBackPressed());
+    }
+
     private void switchFlash() {
 
         int level = switchFlash.getDrawable().getLevel() + 1;
@@ -278,6 +348,10 @@ public class RecordLayout extends FrameLayout implements
         mMediaRecorder.setFlashMode(flashMode);
     }
 
+    private void setupConfig() {
+        MediaRecorderBase.NEED_FULL_SCREEN = true;
+    }
+
     /**
      * 取消回删
      */
@@ -293,6 +367,34 @@ public class RecordLayout extends FrameLayout implements
             }
         }
         return false;
+    }
+
+    private boolean startRecordCheck() {
+        if (mMediaObject.getDuration() >= maxRecordTime) {
+
+            recordInfo.setText(R.string.record_too_long_try_again);
+            postDelayed(removeRecordInfoAction,defaultDelayMills);
+
+            return true;
+        }
+
+        // 取消回删
+        if (cancelDelete()) {
+            return true;
+        }
+
+        if (!startState) {
+            startState = true;
+            startRecord();
+        } else {
+            mMediaObject.buildMediaPart(mMediaRecorder.mCameraId);
+            recordProgress.setData(mMediaObject);
+            setStartUI();
+            mMediaRecorder.setRecordState(true);
+        }
+
+        return false;
+
     }
 
 
@@ -313,11 +415,24 @@ public class RecordLayout extends FrameLayout implements
 
     private void setStartUI() {
         mPressedStatus = true;
-        pressToRecord.animate()
-                .scaleX(0.8f)
-                .scaleY(0.8f)
-                .setDuration(500)
-                .start();
+
+        recordModeRadioGroup.setVisibility(View.INVISIBLE);
+
+        if (pressToRecord.getVisibility() == View.VISIBLE) {
+            pressToRecord.animate()
+                    .scaleX(0.8f)
+                    .scaleY(0.8f)
+                    .setDuration(500)
+                    .start();
+        }
+
+        if (clickToRecord.getVisibility() == View.VISIBLE) {
+            clickToRecord.animate()
+                    .scaleX(0.8f)
+                    .scaleY(0.8f)
+                    .setDuration(500)
+                    .start();
+        }
 
 
         if (handler != null) {
@@ -331,19 +446,45 @@ public class RecordLayout extends FrameLayout implements
 //        mRecordDelete.setVisibility(View.GONE);
         isFrontCamera.setEnabled(false);
         switchFlash.setEnabled(false);
+        next.setEnabled(false);
+        close.setVisibility(INVISIBLE);
     }
 
     private void setStopUI() {
+
+        recordModeRadioGroup.setVisibility(View.VISIBLE);
+
         mPressedStatus = false;
-        pressToRecord.animate().scaleX(1).scaleY(1).setDuration(500).start();
+        if (pressToRecord.getVisibility() == View.VISIBLE) {
+            pressToRecord.animate().scaleX(1).scaleY(1).setDuration(500).start();
+        }
+
+        if (clickToRecord.getVisibility() == View.VISIBLE) {
+            pressToRecord.animate().scaleX(1).scaleY(1).setDuration(500).start();
+        }
 
 
 //        mRecordDelete.setVisibility(View.VISIBLE);
         isFrontCamera.setEnabled(true);
         switchFlash.setEnabled(true);
+        next.setEnabled(true);
+        close.setVisibility(VISIBLE);
+
 
         handler.removeMessages(HANDLE_STOP_RECORD);
         checkViewsVisibility();
+    }
+
+
+
+    private void stopRecordCheck() {
+        mMediaRecorder.setRecordState(false);
+        if (mMediaObject.getDuration() >= maxRecordTime) {
+            next.performClick();
+        } else {
+            mMediaRecorder.setStopDate();
+            setStopUI();
+        }
     }
 
     /**
@@ -414,42 +555,111 @@ public class RecordLayout extends FrameLayout implements
 
     @Override
     public void onPrepared() {
+        recordInfo.setText(R.string.ready_to_record);
+        postDelayed(removeRecordInfoAction, defaultDelayMills);
     }
 
     @Override
     public void onVideoError(int what, int extra) {
-        Log.e("---", "-onVideoError");
+
     }
 
     @Override
     public void onAudioError(int what, String message) {
-        Log.e("---", "-onAudioError");
+
     }
 
     @Override
     public void onEncodeStart() {
-        Log.e("---", "-start");
+        if (onNextClickListener != null) {
+            onNextClickListener.OnEncodeStart();
+        }
     }
 
     @Override
     public void onEncodeProgress(int progress) {
-        Log.e("---", "-onEncodeProgress");
+        if (onNextClickListener != null) {
+            onNextClickListener.OnEncoding(progress);
+        }
     }
 
     @Override
     public void onEncodeComplete() {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
+//        Intent intent = new Intent(Intent.ACTION_VIEW);
         String path = mMediaObject.getOutputTempTranscodingVideoPath();//该路径可以自定义
         File file = new File(path);
         Uri uri = Uri.fromFile(file);
-        intent.setDataAndType(uri, "video/*");
-        getContext().startActivity(intent);
+//        intent.setDataAndType(uri, "video/*");
+//        getContext().startActivity(intent);
+        if (onNextClickListener != null) {
+            onNextClickListener.OnEncodeSuccess(uri);
+        }
     }
 
     @Override
     public void onEncodeError() {
+        if (onNextClickListener != null) {
+            onNextClickListener.OnEncodeFail();
+        }
     }
 
+
+
+    public void setOnNextClickListener(OnNextClickListener onNextClickListener) {
+        this.onNextClickListener = onNextClickListener;
+    }
+
+
+    public void setOnCloseClickListener(OnCloseClickListener onCloseClickListener){
+        this.onCloseClickListener = onCloseClickListener;
+    }
+
+
+
+    public void onBackPressed() {
+        /*if (mRecordDelete != null && mRecordDelete.isChecked()) {
+            cancelDelete();
+            return;
+        }*/
+
+        if (mMediaObject != null && mMediaObject.getDuration() > 1) {
+            // 未转码
+            new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.record_camera_exit_dialog_message)
+                    .setPositiveButton(
+                            R.string.record_camera_cancel_dialog_yes,
+                            (dialog, which) -> {
+                                mMediaObject.delete();
+
+                                if (onCloseClickListener != null) {
+                                    onCloseClickListener.OnPositiveClicked();
+                                }
+
+                                mMediaObject = null;
+                                setupMediaRecorder();
+                                setupRecordProgress();
+
+                            })
+                    .setNegativeButton(R.string.record_camera_cancel_dialog_no,
+                            (dialog, which)->{
+                                if (onCloseClickListener != null) {
+                                    onCloseClickListener.OnPositiveClicked();
+                                }
+
+                            })
+                    .setCancelable(false)
+                    .show();
+            return;
+        }
+
+        if (mMediaObject != null) {
+            mMediaObject.delete();
+        }
+
+        if (onCloseClickListener != null) {
+            onCloseClickListener.OnPositiveClicked();
+        }
+    }
 
     private static class RecordHandler extends Handler {
         private WeakReference<RecordLayout> weakReference;

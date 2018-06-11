@@ -16,13 +16,14 @@
     </item>
 
     <item
-        android:bottom="15dp"
-        android:left="15dp"
-        android:right="15dp"
-        android:top="15dp">
+        android:bottom="30dp"
+        android:left="30dp"
+        android:right="30dp"
+        android:top="30dp">
         <shape
-            android:shape="oval"
+            android:shape="rectangle"
             android:useLevel="true">
+            <size android:height="48dp" android:width="48dp"/>
             <solid android:color="@color/line_color" />
         </shape>
 
