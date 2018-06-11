@@ -48,7 +48,7 @@ public class RecordLayout extends FrameLayout implements
 
     public interface OnCloseClickListener{
         void OnPositiveClicked();
-        void OnNegativeClickec();
+        void OnNegativeClicked();
     }
 
 
@@ -643,7 +643,7 @@ public class RecordLayout extends FrameLayout implements
                     .setNegativeButton(R.string.record_camera_cancel_dialog_no,
                             (dialog, which)->{
                                 if (onCloseClickListener != null) {
-                                    onCloseClickListener.OnPositiveClicked();
+                                    onCloseClickListener.OnNegativeClicked();
                                 }
 
                             })
