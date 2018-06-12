@@ -414,8 +414,9 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
      */
     public void prepare() {
         mPrepared = true;
-        if (mSurfaceCreated)
+        if (mSurfaceCreated) {
             startPreview();
+        }
     }
 
     /**
@@ -703,6 +704,8 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
         mSurfaceHolder = null;
         mPrepared = false;
         mSurfaceCreated = false;
+
+
     }
 
     @Override

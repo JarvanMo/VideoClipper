@@ -118,6 +118,13 @@ public class MediaRecorderNative extends MediaRecorderBase implements MediaRecor
         }
     }
 
+
+    @Override
+    public void release() {
+        super.release();
+        FFmpegBridge.unRegistFFmpegStateListener(this);
+    }
+
     @Override
     public void allRecordEnd() {
 
@@ -139,6 +146,6 @@ public class MediaRecorderNative extends MediaRecorderBase implements MediaRecor
 
     }
     public void activityStop(){
-        FFmpegBridge.unRegistFFmpegStateListener(this);
+//        FFmpegBridge.unRegistFFmpegStateListener(this);
     }
 }

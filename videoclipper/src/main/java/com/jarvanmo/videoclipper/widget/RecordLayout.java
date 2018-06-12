@@ -2,8 +2,8 @@ package com.jarvanmo.videoclipper.widget;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Build;
@@ -14,6 +14,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
@@ -22,8 +23,10 @@ import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jarvanmo.ffmpeg.DeviceUtils;
 import com.jarvanmo.ffmpeg.MediaRecorderBase;
@@ -41,7 +44,7 @@ public class RecordLayout extends FrameLayout implements
 
     public interface OnNextClickListener{
         void OnEncodeStart();
-        void OnEncoding(int progress);
+//        void OnEncoding(int progress);
         void OnEncodeSuccess(Uri uri);
         void OnEncodeFail();
     }
@@ -50,6 +53,7 @@ public class RecordLayout extends FrameLayout implements
         void OnPositiveClicked();
         void OnNegativeClicked();
     }
+
 
 
     /**
@@ -78,7 +82,16 @@ public class RecordLayout extends FrameLayout implements
     private RadioGroup recordModeRadioGroup;
     private TextView recordInfo;
 
+    private ProgressDialog encodeProgressDialog;
+    private boolean isResumed;
 
+    private int encodeStatusUnknown = -2;
+    private int encodeStatusFail = encodeStatusUnknown+1;
+    private int encodeStatusEncoding = encodeStatusFail+ 1;
+    private int encodeStatusSuccess = encodeStatusEncoding+1;
+
+    private int encodeStatus  = encodeStatusUnknown;//-2未知,-1失败,0进行中，１成功
+    private Uri encodeResult;
 
     /**
      * SDK视频录制对象
@@ -104,9 +117,11 @@ public class RecordLayout extends FrameLayout implements
 
     private View.OnTouchListener pressToRecordOnTouchListener = new View.OnTouchListener() {
 
+        @SuppressLint("ClickableViewAccessibility")
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             if (mMediaRecorder == null) {
+
                 return false;
             }
 
@@ -114,13 +129,8 @@ public class RecordLayout extends FrameLayout implements
                 case MotionEvent.ACTION_DOWN:
                     // 检测是否手动对焦
                     // 判断是否已经超时
-
-                    if (startRecordCheck()) {
-                        return true;
-                    }
-
-                    break;
-
+                     startRecordCheck();
+                    return  true;
                 case MotionEvent.ACTION_UP:
                     stopRecordCheck();
 
@@ -162,13 +172,13 @@ public class RecordLayout extends FrameLayout implements
 
     private void setup(Context context) {
         findViews(context);
-        setupRecordMode();
         setupPressToRecord();
         setupClickToRecord();
         setupMediaRecorder();
         setupRecordPreview();
         setupCameraController();
         setupRecordProgress();
+        setupRecordMode();
         setupConfig();
         setupNext();
         setupClose();
@@ -399,6 +409,7 @@ public class RecordLayout extends FrameLayout implements
 
 
     private void startRecord() {
+
         if (mMediaRecorder != null) {
 
             MediaObject.MediaPart part = mMediaRecorder.startRecord();
@@ -536,17 +547,29 @@ public class RecordLayout extends FrameLayout implements
 //            mRecordLed.setChecked(false);
             mMediaRecorder.prepare();
             recordProgress.setData(mMediaObject);
+            mMediaRecorder.startPreview();
+
         }
+
+
+        isResumed = true;
+        handleNextCallback();
+        dismissProgressDialogIfNeeded();
+
     }
 
     public void onDestroy() {
         mMediaRecorder.release();
     }
 
-    public void onStop() {
+    public void onPause() {
+
+        isResumed = false;
         if (mMediaRecorder instanceof MediaRecorderNative) {
             ((MediaRecorderNative) mMediaRecorder).activityStop();
         }
+
+        mMediaRecorder.stopPreview();
 //        hideProgress();
 //        mProgressDialog = null;
 
@@ -571,6 +594,18 @@ public class RecordLayout extends FrameLayout implements
 
     @Override
     public void onEncodeStart() {
+
+        if (encodeProgressDialog == null) {
+            encodeProgressDialog = new ProgressDialog(getContext());
+            encodeProgressDialog.setMessage(getContext().getString(R.string.video_ffmpeg_encoding));
+            encodeProgressDialog.setCancelable(false);
+            encodeProgressDialog.show();
+        }
+
+        encodeStatus = encodeStatusEncoding;
+
+        encodeResult = null;
+
         if (onNextClickListener != null) {
             onNextClickListener.OnEncodeStart();
         }
@@ -578,9 +613,9 @@ public class RecordLayout extends FrameLayout implements
 
     @Override
     public void onEncodeProgress(int progress) {
-        if (onNextClickListener != null) {
-            onNextClickListener.OnEncoding(progress);
-        }
+//        if (onNextClickListener != null) {
+//            onNextClickListener.OnEncoding(progress);
+//        }
     }
 
     @Override
@@ -589,16 +624,24 @@ public class RecordLayout extends FrameLayout implements
         String path = mMediaObject.getOutputTempTranscodingVideoPath();//该路径可以自定义
         File file = new File(path);
         Uri uri = Uri.fromFile(file);
+        encodeStatus = encodeStatusSuccess;
 //        intent.setDataAndType(uri, "video/*");
 //        getContext().startActivity(intent);
-        if (onNextClickListener != null) {
+        encodeResult = uri;
+
+        dismissProgressDialogIfNeeded();
+
+        if (onNextClickListener != null && isResumed) {
             onNextClickListener.OnEncodeSuccess(uri);
         }
     }
 
     @Override
     public void onEncodeError() {
-        if (onNextClickListener != null) {
+        encodeResult = null;
+        encodeStatus = encodeStatusFail;
+        dismissProgressDialogIfNeeded();
+        if (onNextClickListener != null && isResumed) {
             onNextClickListener.OnEncodeFail();
         }
     }
@@ -615,6 +658,10 @@ public class RecordLayout extends FrameLayout implements
     }
 
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return super.onKeyDown(keyCode, event);
+    }
 
     public void onBackPressed() {
         /*if (mRecordDelete != null && mRecordDelete.isChecked()) {
@@ -658,6 +705,34 @@ public class RecordLayout extends FrameLayout implements
 
         if (onCloseClickListener != null) {
             onCloseClickListener.OnPositiveClicked();
+        }
+    }
+
+
+
+    private void dismissProgressDialogIfNeeded(){
+        boolean isEncodeDone = ( encodeStatus == encodeStatusSuccess || encodeStatus == encodeStatusFail);
+        if(isResumed && isEncodeDone && encodeProgressDialog != null && encodeProgressDialog.isShowing()){
+            encodeProgressDialog.dismiss();
+        }
+    }
+
+    private void handleNextCallback(){
+        if (onNextClickListener == null) {
+            return;
+        }
+        if(encodeProgressDialog == null || !encodeProgressDialog.isShowing()){
+            return;
+        }
+
+        if(encodeStatus == encodeStatusSuccess){
+            if(encodeResult != null){
+                onNextClickListener.OnEncodeSuccess(encodeResult);
+            }
+        }else if( encodeStatus == encodeStatusFail){
+            onNextClickListener.OnEncodeFail();
+
+
         }
     }
 
