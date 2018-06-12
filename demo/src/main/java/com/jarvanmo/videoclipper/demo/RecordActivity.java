@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import com.jarvanmo.ffmpeg.JianXiCamera;
 import com.jarvanmo.videoclipper.dialog.EncodeProgressDialog;
@@ -64,6 +65,7 @@ public class RecordActivity extends AppCompatActivity {
             public void OnEncodeSuccess(Uri uri) {
 //                encodeProgressDialog.dismiss();
 //
+                Toast.makeText(RecordActivity.this,"done",Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setDataAndType(uri, "video/*");
                 startActivity(intent);

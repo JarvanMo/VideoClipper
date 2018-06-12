@@ -22,6 +22,7 @@ import com.jarvanmo.ffmpeg.model.MediaObject;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 
@@ -29,7 +30,7 @@ import java.util.List;
  * 视频录制抽象类
  */
 public abstract class MediaRecorderBase implements Callback, PreviewCallback, IMediaRecorder {
-    public static  boolean NEED_FULL_SCREEN = false;
+    public static boolean NEED_FULL_SCREEN = false;
     /**
      * 小视频高度
      */
@@ -180,7 +181,7 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
      */
     protected volatile long mPreviewFrameCallCount = 0;
 
-    private String mFrameRateCmd="";
+    private String mFrameRateCmd = "";
 
     public MediaRecorderBase() {
 
@@ -200,12 +201,15 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
             }
         }
     }
-    public void setRecordState(boolean state){
-        this.mRecording=state;
+
+    public void setRecordState(boolean state) {
+        this.mRecording = state;
     }
-    public boolean getRecordState(){
+
+    public boolean getRecordState() {
         return mRecording;
     }
+
     /**
      * 设置转码监听
      */
@@ -542,20 +546,51 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
         for (int i = mSupportedPreviewSizes.size() - 1; i >= 0; i--) {
             Size size = mSupportedPreviewSizes.get(i);
             if (size.height == SMALL_VIDEO_HEIGHT) {
-
                 mSupportedPreviewWidth = size.width;
-                checkFullWidth(mSupportedPreviewWidth,SMALL_VIDEO_WIDTH);
+                checkFullWidth(mSupportedPreviewWidth, SMALL_VIDEO_WIDTH);
                 findWidth = true;
                 break;
             }
         }
+
+//        Comparator<Size> comparator = new Comparator<Size>() {
+//            @Override
+//            public int compare(Size o1, Size o2) {
+//
+//                int result = o2.width - o1.width;
+//                if(result == 0){
+//                    return o2.height - o1.height;
+//                }else {
+//                    return result;
+//                }
+//
+//            }
+//        };
         if (!findWidth) {
             Log.e(getClass().getSimpleName(), "传入高度不支持或未找到对应宽度,请按照要求重新设置，否则会出现一些严重问题");
             mSupportedPreviewWidth = 640;
-            checkFullWidth(640,360);
+            checkFullWidth(640, 360);
             SMALL_VIDEO_HEIGHT = 480;
         }
+
+        Log.e("tag",SMALL_VIDEO_HEIGHT+"*"+SMALL_VIDEO_WIDTH);
+//        Collections.sort(mSupportedPreviewSizes,comparator);
+//        Size size ;
+//        size = mSupportedPreviewSizes.get(0);
+//        for (Size supportedPreviewSize : mSupportedPreviewSizes) {
+//            if(supportedPreviewSize.width  == 720 && supportedPreviewSize.height == 1280){
+//                size = supportedPreviewSize;
+//                break;
+//            }
+//        }
+
+//        mSupportedPreviewWidth = size.width;
+//        SMALL_VIDEO_HEIGHT = size.height;
+//        SMALL_VIDEO_WIDTH = size.width;
+
+
         mParameters.setPreviewSize(mSupportedPreviewWidth, SMALL_VIDEO_HEIGHT);
+
 
         // 设置输出视频流尺寸，采样率
         mParameters.setPreviewFormat(ImageFormat.YV12);
@@ -587,9 +622,9 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
     }
 
     private void checkFullWidth(int trueValue, int falseValue) {
-        if(NEED_FULL_SCREEN){
-            SMALL_VIDEO_WIDTH=trueValue;
-        }else {
+        if (NEED_FULL_SCREEN) {
+            SMALL_VIDEO_WIDTH = trueValue;
+        } else {
             SMALL_VIDEO_WIDTH = falseValue;
         }
     }
@@ -653,7 +688,7 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
     protected void setPreviewCallback() {
         Size size = mParameters.getPreviewSize();
         if (size != null) {
-            int buffSize = size.width * size.height * 3/2;
+            int buffSize = size.width * size.height * 3 / 2;
             try {
                 camera.addCallbackBuffer(new byte[buffSize]);
                 camera.addCallbackBuffer(new byte[buffSize]);
@@ -766,7 +801,7 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
 
     }
 
-    protected String getScaleWH(){
+    protected String getScaleWH() {
 
         return "";
     }
@@ -836,10 +871,10 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
                 vbr = "";
             }
             String scaleWH = getScaleWH();
-            if(!TextUtils.isEmpty(scaleWH)){
-                scaleWH="-s "+scaleWH;
-            }else {
-                scaleWH="";
+            if (!TextUtils.isEmpty(scaleWH)) {
+                scaleWH = "-s " + scaleWH;
+            } else {
+                scaleWH = "";
             }
             String cmd_transcoding = String.format("ffmpeg -threads 16 -i %s -c:v libx264 %s %s %s -c:a libfdk_aac %s %s %s %s",
                     mMediaObject.getOutputTempVideoPath(),
@@ -851,7 +886,7 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
                     scaleWH,
                     mMediaObject.getOutputTempTranscodingVideoPath()
             );
-            boolean transcodingFlag = FFmpegBridge.jxFFmpegCMDRun( cmd_transcoding) == 0;
+            boolean transcodingFlag = FFmpegBridge.jxFFmpegCMDRun(cmd_transcoding) == 0;
 
             boolean captureFlag = FFMpegUtils.captureThumbnails(mMediaObject.getOutputTempTranscodingVideoPath(), mMediaObject.getOutputVideoThumbPath(), String.valueOf(CAPTURE_THUMBNAILS_TIME));
 
@@ -860,7 +895,7 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
 
             return result;
         } else {
-            boolean captureFlag = FFMpegUtils.captureThumbnails(mMediaObject.getOutputTempVideoPath(), mMediaObject.getOutputVideoThumbPath(),  String.valueOf(CAPTURE_THUMBNAILS_TIME));
+            boolean captureFlag = FFMpegUtils.captureThumbnails(mMediaObject.getOutputTempVideoPath(), mMediaObject.getOutputVideoThumbPath(), String.valueOf(CAPTURE_THUMBNAILS_TIME));
 
             FileUtils.deleteCacheFile2TS(mMediaObject.getOutputDirectory());
             boolean result = captureFlag && mergeFlag;
@@ -875,10 +910,9 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
         return mFrameRateCmd;
     }
 
-    protected void setTranscodingFrameRate(int rate){
-        this.mFrameRateCmd=String.format(" -r %d",rate);
+    protected void setTranscodingFrameRate(int rate) {
+        this.mFrameRateCmd = String.format(" -r %d", rate);
     }
-
 
 
     protected String getBitrateModeCommand(BaseMediaBitrateConfig config, String defualtCmd, boolean needSymbol) {

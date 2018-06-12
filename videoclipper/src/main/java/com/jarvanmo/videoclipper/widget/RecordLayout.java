@@ -29,11 +29,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.jarvanmo.ffmpeg.DeviceUtils;
+import com.jarvanmo.ffmpeg.Log;
 import com.jarvanmo.ffmpeg.MediaRecorderBase;
 import com.jarvanmo.ffmpeg.MediaRecorderNative;
 import com.jarvanmo.ffmpeg.RecordProgressView;
 import com.jarvanmo.ffmpeg.model.MediaObject;
 import com.jarvanmo.videoclipper.R;
+import com.jarvanmo.videoclipper.util.DensityUtils;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -310,7 +312,7 @@ public class RecordLayout extends FrameLayout implements
             return;
         }
 
-        File videoCache = new File(file, "videoCache");
+        File videoCache = new File(file.getAbsolutePath()+"/videoCache/");
         if (!videoCache.exists()) {
             if (!videoCache.mkdirs()) {
                 return;
@@ -578,6 +580,8 @@ public class RecordLayout extends FrameLayout implements
 
     @Override
     public void onPrepared() {
+//        MediaRecorderBase.mSupportedPreviewWidth = DeviceUtils.getScreenWidth(getContext());
+        android.util.Log.e("tag",DeviceUtils.getScreenWidth(getContext())+"--");
         recordInfo.setText(R.string.ready_to_record);
         postDelayed(removeRecordInfoAction, defaultDelayMills);
     }
