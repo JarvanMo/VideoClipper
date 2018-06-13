@@ -2,6 +2,8 @@ package com.jarvanmo.ffmpeg;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Area;
@@ -30,6 +32,14 @@ import java.util.List;
  * 视频录制抽象类
  */
 public abstract class MediaRecorderBase implements Callback, PreviewCallback, IMediaRecorder {
+
+
+    public interface ContextAttachment {
+        Context attachContext();
+    }
+
+
+
     public static boolean NEED_FULL_SCREEN = false;
     /**
      * 小视频高度
@@ -182,6 +192,8 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
     protected volatile long mPreviewFrameCallCount = 0;
 
     private String mFrameRateCmd = "";
+
+    private ContextAttachment contextAttachment;
 
     public MediaRecorderBase() {
 
@@ -511,6 +523,11 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
         return list != null && list.contains(key);
     }
 
+    public void setContextAttachment(ContextAttachment contextAttachment){
+        this.contextAttachment = contextAttachment;
+    }
+
+
     /**
      * 预处理一些拍摄参数
      * 注意：自动对焦参数cam_mode和cam-mode可能有些设备不支持，导致视频画面变形，需要判断一下，已知有"GT-N7100", "GT-I9308"会存在这个问题
@@ -539,19 +556,50 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
             }
         }
 
+
         mParameters.setPreviewFrameRate(mFrameRate);
-        // mParameters.setPreviewFpsRange(15 * 1000, 20 * 1000);
-//		TODO 设置浏览尺寸
-        boolean findWidth = false;
-        for (int i = mSupportedPreviewSizes.size() - 1; i >= 0; i--) {
-            Size size = mSupportedPreviewSizes.get(i);
-            if (size.height == SMALL_VIDEO_HEIGHT) {
-                mSupportedPreviewWidth = size.width;
-                checkFullWidth(mSupportedPreviewWidth, SMALL_VIDEO_WIDTH);
-                findWidth = true;
-                break;
+
+        if(contextAttachment == null || contextAttachment.attachContext() == null){
+
+            //		TODO 设置浏览尺寸
+            boolean findWidth = false;
+            for (int i = mSupportedPreviewSizes.size() - 1; i >= 0; i--) {
+                Size size = mSupportedPreviewSizes.get(i);
+                if (size.height == SMALL_VIDEO_HEIGHT) {
+                    mSupportedPreviewWidth = size.width;
+                    checkFullWidth(mSupportedPreviewWidth, SMALL_VIDEO_WIDTH);
+                    findWidth = true;
+                    break;
+                }
             }
+
+
+            if (!findWidth) {
+                Log.e(getClass().getSimpleName(), "传入高度不支持或未找到对应宽度,请按照要求重新设置，否则会出现一些严重问题");
+                mSupportedPreviewWidth = 640;
+                checkFullWidth(640, 360);
+                SMALL_VIDEO_HEIGHT = 480;
+            }
+
+        }else {
+
+            Context context = contextAttachment.attachContext();
+
+            boolean isPortrait =context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+            Size size = getCloselyPreSize(isPortrait,DeviceUtils.getScreenWidth(context),DeviceUtils.getScreenHeight(context),mSupportedPreviewSizes);
+            mSupportedPreviewWidth = size.width;
+            SMALL_VIDEO_HEIGHT = size.height;
+            SMALL_VIDEO_WIDTH = size.width;
+
+
         }
+
+        // mParameters.setPreviewFpsRange(15 * 1000, 20 * 1000);
+
+
+
+
+
 
 //        Comparator<Size> comparator = new Comparator<Size>() {
 //            @Override
@@ -566,14 +614,8 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
 //
 //            }
 //        };
-        if (!findWidth) {
-            Log.e(getClass().getSimpleName(), "传入高度不支持或未找到对应宽度,请按照要求重新设置，否则会出现一些严重问题");
-            mSupportedPreviewWidth = 640;
-            checkFullWidth(640, 360);
-            SMALL_VIDEO_HEIGHT = 480;
-        }
 
-        Log.e("tag",SMALL_VIDEO_HEIGHT+"*"+SMALL_VIDEO_WIDTH);
+
 //        Collections.sort(mSupportedPreviewSizes,comparator);
 //        Size size ;
 //        size = mSupportedPreviewSizes.get(0);
@@ -674,6 +716,40 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
         }
     }
 
+    private Camera.Size getCloselyPreSize(boolean isPortrait, int surfaceWidth, int surfaceHeight, List<Camera.Size> preSizeList) {
+        int reqTmpWidth;
+        int reqTmpHeight;
+        // 当屏幕为垂直的时候需要把宽高值进行调换，保证宽大于高
+        if (isPortrait) {
+            reqTmpWidth = surfaceHeight;
+            reqTmpHeight = surfaceWidth;
+        } else {
+            reqTmpWidth = surfaceWidth;
+            reqTmpHeight = surfaceHeight;
+        }
+        //先查找preview中是否存在与surfaceview相同宽高的尺寸
+        for(Camera.Size size : preSizeList){
+            if((size.width == reqTmpWidth) && (size.height == reqTmpHeight)){
+                return size;
+            }
+        }
+
+        // 得到与传入的宽高比最接近的size
+        float reqRatio = ((float) reqTmpWidth) / reqTmpHeight;
+        float curRatio, deltaRatio;
+        float deltaRatioMin = Float.MAX_VALUE;
+        Camera.Size retSize = null;
+        for (Camera.Size size : preSizeList) {
+            curRatio = ((float) size.width) / size.height;
+            deltaRatio = Math.abs(reqRatio - curRatio);
+            if (deltaRatio < deltaRatioMin) {
+                deltaRatioMin = deltaRatio;
+                retSize = size;
+            }
+        }
+
+        return retSize;
+    }
 
     /**
      * 预览调用成功，子类可以做一些操作

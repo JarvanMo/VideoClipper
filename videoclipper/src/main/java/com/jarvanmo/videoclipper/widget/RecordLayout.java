@@ -23,26 +23,25 @@ import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.jarvanmo.ffmpeg.DeviceUtils;
-import com.jarvanmo.ffmpeg.Log;
 import com.jarvanmo.ffmpeg.MediaRecorderBase;
 import com.jarvanmo.ffmpeg.MediaRecorderNative;
 import com.jarvanmo.ffmpeg.RecordProgressView;
 import com.jarvanmo.ffmpeg.model.MediaObject;
 import com.jarvanmo.videoclipper.R;
-import com.jarvanmo.videoclipper.util.DensityUtils;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
 
 public class RecordLayout extends FrameLayout implements
         MediaRecorderBase.OnErrorListener, MediaRecorderBase.OnPreparedListener,
-        MediaRecorderBase.OnEncodeListener {
+        MediaRecorderBase.OnEncodeListener,MediaRecorderBase.ContextAttachment {
+
+
+
 
     public interface OnNextClickListener{
         void OnEncodeStart();
@@ -55,7 +54,6 @@ public class RecordLayout extends FrameLayout implements
         void OnPositiveClicked();
         void OnNegativeClicked();
     }
-
 
 
     /**
@@ -296,11 +294,13 @@ public class RecordLayout extends FrameLayout implements
     private void setupMediaRecorder() {
         mMediaRecorder = new MediaRecorderNative();
 
-        mMediaRecorder.setVideoBitRate(580000);
+        mMediaRecorder.setVideoBitRate((int) (580000*2.0));
 
         mMediaRecorder.setOnErrorListener(this);
         mMediaRecorder.setOnEncodeListener(this);
         mMediaRecorder.setOnPreparedListener(this);
+
+        mMediaRecorder.setContextAttachment(this);
 
 //        File f = new File(JianXiCamera.getVideoCachePath());
 //        if (!FileUtils.checkFile(f)) {
@@ -362,6 +362,8 @@ public class RecordLayout extends FrameLayout implements
 
     private void setupConfig() {
         MediaRecorderBase.NEED_FULL_SCREEN = true;
+        MediaRecorderBase.SMALL_VIDEO_HEIGHT = DeviceUtils.getScreenHeight(getContext());
+        android.util.Log.e("tag",DeviceUtils.getScreenHeight(getContext()) +"**"+DeviceUtils.getScreenWidth(getContext()));
     }
 
     /**
@@ -380,6 +382,8 @@ public class RecordLayout extends FrameLayout implements
         }
         return false;
     }
+
+
 
     private boolean startRecordCheck() {
         if (mMediaObject.getDuration() >= maxRecordTime) {
@@ -581,7 +585,7 @@ public class RecordLayout extends FrameLayout implements
     @Override
     public void onPrepared() {
 //        MediaRecorderBase.mSupportedPreviewWidth = DeviceUtils.getScreenWidth(getContext());
-        android.util.Log.e("tag",DeviceUtils.getScreenWidth(getContext())+"--");
+
         recordInfo.setText(R.string.ready_to_record);
         postDelayed(removeRecordInfoAction, defaultDelayMills);
     }
@@ -650,7 +654,10 @@ public class RecordLayout extends FrameLayout implements
         }
     }
 
-
+    @Override
+    public Context attachContext() {
+        return getContext();
+    }
 
     public void setOnNextClickListener(OnNextClickListener onNextClickListener) {
         this.onNextClickListener = onNextClickListener;
