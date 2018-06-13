@@ -363,7 +363,6 @@ public class RecordLayout extends FrameLayout implements
     private void setupConfig() {
         MediaRecorderBase.NEED_FULL_SCREEN = true;
         MediaRecorderBase.SMALL_VIDEO_HEIGHT = DeviceUtils.getScreenHeight(getContext());
-        android.util.Log.e("tag",DeviceUtils.getScreenHeight(getContext()) +"**"+DeviceUtils.getScreenWidth(getContext()));
     }
 
     /**

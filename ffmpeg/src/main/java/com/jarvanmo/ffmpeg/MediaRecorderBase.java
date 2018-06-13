@@ -594,6 +594,7 @@ public abstract class MediaRecorderBase implements Callback, PreviewCallback, IM
 
         }
 
+
         // mParameters.setPreviewFpsRange(15 * 1000, 20 * 1000);
 
 
