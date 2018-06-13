@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Toast;
 
@@ -28,7 +29,7 @@ public class RecordActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-        JianXiCamera.initialize(true,"/log");
+        JianXiCamera.initialize(true, "/log");
         JianXiCamera.setVideoCachePath(getExternalCacheDir().getAbsolutePath());
 
         recordLayout = findViewById(R.id.record);
@@ -37,7 +38,7 @@ public class RecordActivity extends AppCompatActivity {
         recordLayout.setOnCloseClickListener(new RecordLayout.OnCloseClickListener() {
             @Override
             public void OnPositiveClicked() {
-                    finish();
+                finish();
             }
 
             @Override
@@ -55,21 +56,22 @@ public class RecordActivity extends AppCompatActivity {
 //                encodeProgressDialog.show(ft, "videoProgress");
             }
 
+            @Override
+            public void OnEncodeSuccess(Uri video, Uri thumbnail) {
+
+//                encodeProgressDialog.dismiss();
+//
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(video, "video/*");
+                startActivity(intent);
+
+            }
+
 //            @Override
 //            public void OnEncoding(int progress) {
 //                encodeProgressDialog.updateProgress(progress);
 //                Toast.makeText(RecordActivity.this,"--"+progress,Toast.LENGTH_SHORT).show();
 //            }
-
-            @Override
-            public void OnEncodeSuccess(Uri uri) {
-//                encodeProgressDialog.dismiss();
-//
-                Toast.makeText(RecordActivity.this,"done",Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(uri, "video/*");
-                startActivity(intent);
-            }
 
             @Override
             public void OnEncodeFail() {
@@ -91,8 +93,8 @@ public class RecordActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed() {
-        recordLayout.onBackPressed();
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return recordLayout.onKeyDown(keyCode, event);
     }
 
     @Override

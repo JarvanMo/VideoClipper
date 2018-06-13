@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:keepScreenOn="true"
-    android:focusableInTouchMode="false"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:focusableInTouchMode="false"
+    android:keepScreenOn="true">
 
     <SurfaceView
         android:id="@+id/recordPreview"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:focusableInTouchMode="true"
+        android:focusable="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -24,8 +26,8 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:text="@string/prepare_to_record"
-        android:textSize="20sp"
         android:textColor="@android:color/white"
+        android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -38,8 +40,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-
 
 
     <ImageButton
@@ -75,15 +75,15 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginTop="8dp"
-        android:text="@string/next"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:paddingStart="5dp"
-        android:paddingEnd="5dp"
-        android:enabled="false"
-        android:textSize="16sp"
         android:background="@drawable/selector_record_next_bg"
+        android:enabled="false"
+        android:paddingBottom="8dp"
+        android:paddingEnd="5dp"
+        android:paddingStart="5dp"
+        android:paddingTop="8dp"
+        android:text="@string/next"
         android:textColor="@drawable/selector_next_text_color"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/recordProgress" />
 
@@ -108,36 +108,34 @@
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:orientation="horizontal"
         android:background="@drawable/shape_record_mode_wrapper_bg"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" >
+        app:layout_constraintStart_toStartOf="parent">
 
         <RadioButton
             android:id="@+id/pressMode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
+            android:background="@drawable/selector_record_mode_radio_button_left_bg"
+            android:button="@null"
+            android:checked="true"
             android:padding="3dp"
             android:text="@string/press_to_record2"
-            android:checked="true"
-            android:background="@drawable/selector_record_mode_radio_button_left_bg"
             android:textColor="@drawable/selector_record_mode_text_color"
-            android:button="@null"
-            />
+            android:textSize="16sp" />
 
         <RadioButton
             android:id="@+id/clickMode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
+            android:background="@drawable/selector_record_mode_radio_button_right_bg"
+            android:button="@null"
             android:padding="3dp"
             android:text="@string/click_to_press"
-            android:background="@drawable/selector_record_mode_radio_button_right_bg"
             android:textColor="@drawable/selector_record_mode_text_color"
-            android:button="@null"
-            />
+            android:textSize="16sp" />
     </RadioGroup>
 
     <ImageView
@@ -147,10 +145,10 @@
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:src="@drawable/level_list_click_record"
         android:contentDescription="@null"
-        android:textSize="18sp"
         android:focusable="true"
+        android:src="@drawable/level_list_click_record"
+        android:textSize="18sp"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/recordMode"
         app:layout_constraintEnd_toEndOf="parent"
@@ -161,17 +159,17 @@
         android:layout_width="108dp"
         android:layout_height="108dp"
         android:layout_marginBottom="8dp"
-        android:focusable="true"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:background="@drawable/small_video_shoot"
+        android:focusable="true"
+        android:focusableInTouchMode="false"
         android:text="@string/press_to_record"
         android:textColor="@color/line_color"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@+id/recordMode"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/recordPreview" />
-
 
 
 </android.support.constraint.ConstraintLayout>

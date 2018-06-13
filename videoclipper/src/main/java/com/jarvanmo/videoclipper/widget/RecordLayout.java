@@ -46,7 +46,7 @@ public class RecordLayout extends FrameLayout implements
     public interface OnNextClickListener{
         void OnEncodeStart();
 //        void OnEncoding(int progress);
-        void OnEncodeSuccess(Uri uri);
+        void OnEncodeSuccess(Uri video,Uri thumbnail);
         void OnEncodeFail();
     }
 
@@ -92,6 +92,7 @@ public class RecordLayout extends FrameLayout implements
 
     private int encodeStatus  = encodeStatusUnknown;//-2未知,-1失败,0进行中，１成功
     private Uri encodeResult;
+    private Uri encodeResultThumbnail;
 
     /**
      * SDK视频录制对象
@@ -612,6 +613,7 @@ public class RecordLayout extends FrameLayout implements
         encodeStatus = encodeStatusEncoding;
 
         encodeResult = null;
+        encodeResultThumbnail = null;
 
         if (onNextClickListener != null) {
             onNextClickListener.OnEncodeStart();
@@ -636,16 +638,20 @@ public class RecordLayout extends FrameLayout implements
 //        getContext().startActivity(intent);
         encodeResult = uri;
 
+
+        File file1 = new File(mMediaObject.getOutputVideoThumbPath());
+        encodeResultThumbnail = Uri.fromFile(file1);
         dismissProgressDialogIfNeeded();
 
         if (onNextClickListener != null && isResumed) {
-            onNextClickListener.OnEncodeSuccess(uri);
+            onNextClickListener.OnEncodeSuccess(uri,encodeResultThumbnail);
         }
     }
 
     @Override
     public void onEncodeError() {
         encodeResult = null;
+        encodeResultThumbnail = null;
         encodeStatus = encodeStatusFail;
         dismissProgressDialogIfNeeded();
         if (onNextClickListener != null && isResumed) {
@@ -670,10 +676,16 @@ public class RecordLayout extends FrameLayout implements
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            onBackPressed();
+            return true;
+        }
         return super.onKeyDown(keyCode, event);
     }
 
-    public void onBackPressed() {
+
+
+    private void onBackPressed() {
         /*if (mRecordDelete != null && mRecordDelete.isChecked()) {
             cancelDelete();
             return;
@@ -737,7 +749,7 @@ public class RecordLayout extends FrameLayout implements
 
         if(encodeStatus == encodeStatusSuccess){
             if(encodeResult != null){
-                onNextClickListener.OnEncodeSuccess(encodeResult);
+                onNextClickListener.OnEncodeSuccess(encodeResult,encodeResultThumbnail);
             }
         }else if( encodeStatus == encodeStatusFail){
             onNextClickListener.OnEncodeFail();
