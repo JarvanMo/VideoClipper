@@ -36,7 +36,10 @@ public class MediaRecorderNative extends MediaRecorderBase implements MediaRecor
             vCustomFormat=FFmpegBridge.ROTATE_270_CROP_LT_MIRROR_LR;
         }
 
+
+
         FFmpegBridge.prepareJXFFmpegEncoder( mMediaObject.getOutputDirectory(), mMediaObject.getBaseName(),vCustomFormat, mSupportedPreviewWidth, SMALL_VIDEO_HEIGHT, SMALL_VIDEO_WIDTH, SMALL_VIDEO_HEIGHT, mFrameRate, mVideoBitrate);
+
 
         MediaObject.MediaPart result = null;
 

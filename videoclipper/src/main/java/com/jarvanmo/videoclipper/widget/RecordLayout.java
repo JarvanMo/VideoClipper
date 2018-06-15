@@ -264,7 +264,7 @@ public class RecordLayout extends FrameLayout implements
 //                }
 
                 if (mMediaRecorder != null) {
-                    mMediaRecorder.switchCamera();
+                    mMediaRecorder.switchCamera(isChecked?Camera.CameraInfo.CAMERA_FACING_FRONT:Camera.CameraInfo.CAMERA_FACING_BACK);
                     switchFlash.setEnabled(!mMediaRecorder.isFrontCamera());
                 }
 
@@ -415,6 +415,8 @@ public class RecordLayout extends FrameLayout implements
 
 
     private void startRecord() {
+
+        isFrontCamera.setVisibility(INVISIBLE);
 
         if (mMediaRecorder != null) {
 
